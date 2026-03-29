@@ -24,7 +24,7 @@ SignSpeak AI is a computer vision and machine learning application designed to b
 ### Installation
 1. **Clone the repository**:
    ```bash
-   git clone [https://github.com/YOUR_USERNAME/SignSpeak-AI.git](https://github.com/YOUR_USERNAME/SignSpeak-AI.git)
+   git clone https://github.com/Atiqumer/SignSpeakAI
    cd SignSpeak-AI
 
 ### Set up a Virtual Environment:
