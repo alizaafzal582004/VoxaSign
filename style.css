@@ -195,6 +195,28 @@ button {
     background: #ff4d4d;
     color: white;
 }
+#clearCanvasBtn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: rgba(231, 76, 60, 0.8); /* Red tint */
+    color: white;
+    border: none;
+    cursor: pointer;
+    z-index: 10;
+    display: none; /* Hidden by default, show when image is uploaded */
+    font-weight: bold;
+    align-items: center;
+    justify-content: center;
+}
+
+#clearCanvasBtn:hover {
+    background: #e74c3c;
+    transform: scale(1.1);
+}
 
 #generateBtn:hover {
     background: #00d084;
