@@ -1,54 +1,118 @@
 import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest";
 
-// UI Elements
+// Canvas elements
 const video = document.getElementById("webcam");
-const canvas = document.getElementById("output_canvas");
-const ctx = canvas.getContext("2d");
-const alphabetBox = document.getElementById("predictedAlphabet");
-const wordBox = document.getElementById("cumulativeWord");
-const sentenceBox = document.getElementById("generatedSentence");
-const imageUpload = document.getElementById("imageUpload");
-const clearCanvasBtn = document.getElementById("clearCanvasBtn"); // NEW
+const liveCanvas = document.getElementById("output_canvas");
+const liveCtx = liveCanvas.getContext("2d");
+const imageCanvas = document.getElementById("image_canvas");
 
-// Variables
+// State
 let handLandmarker;
 let model;
 let currentPrediction = "";
 let lastVideoTime = -1;
-let isUsingUpload = false; // Flag to track if we are showing an image or video
+let activeMode = null; // 'live' | 'upload'
+let cameraStream = null;
 
-const labelMap = ["A", "B", "Blank", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+// Expose prediction to parent UI
+window.currentPrediction = "";
+window.clearCurrentPrediction = () => {
+    currentPrediction = "";
+    window.currentPrediction = "";
+    if (window.updatePrediction) window.updatePrediction("", 0);
+};
 
+const labelMap = [
+    "A","B","Blank","C","D","E","F","G","H","I",
+    "J","K","L","M","N","O","P","Q","R","S",
+    "T","U","V","W","X","Y","Z"
+];
+
+// ── INIT ──
 async function initialize() {
     try {
-        const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
+        const vision = await FilesetResolver.forVisionTasks(
+            "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+        );
         handLandmarker = await HandLandmarker.createFromOptions(vision, {
-            baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task" },
-            runningMode: "VIDEO", 
+            baseOptions: {
+                modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
+            },
+            runningMode: "VIDEO",
             numHands: 1
         });
         model = await tf.loadLayersModel('./web_model/model.json');
-        setupCamera();
+        console.log("✅ AI Engine Ready");
     } catch (error) {
         console.error("Initialization failed:", error);
     }
 }
 
-async function setupCamera() {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
-    video.srcObject = stream;
-    video.onloadedmetadata = () => { video.play(); predictWebcam(); };
+// ── CAMERA ──
+async function startCamera() {
+    if (cameraStream) return; // already running
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+        video.srcObject = cameraStream;
+        video.onloadedmetadata = () => {
+            video.play();
+            predictWebcam();
+        };
+    } catch (err) {
+        console.error("Camera access denied:", err);
+    }
 }
 
-function drawUI(landmarks) {
-    const x = landmarks.map(l => l.x * canvas.width);
-    const y = landmarks.map(l => l.y * canvas.height);
-    const minX = Math.min(...x); const maxX = Math.max(...x);
-    const minY = Math.min(...y); const maxY = Math.max(...y);
-    ctx.strokeStyle = "#e74c3c"; ctx.lineWidth = 4;
-    ctx.strokeRect(minX - 20, minY - 20, (maxX - minX) + 40, (maxY - minY) + 40);
+function stopCamera() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+        video.srcObject = null;
+    }
 }
 
+// ── MODE CHANGE LISTENER ──
+window.addEventListener('modeChange', async (e) => {
+    activeMode = e.detail;
+
+    if (activeMode === 'live') {
+        await startCamera();
+    } else {
+        stopCamera();
+        currentPrediction = "";
+        window.currentPrediction = "";
+        if (window.updatePrediction) window.updatePrediction("", 0);
+    }
+});
+
+// ── DRAW UI on canvas ──
+function drawLandmarkBox(ctx, landmarks, w, h) {
+    const x = landmarks.map(l => l.x * w);
+    const y = landmarks.map(l => l.y * h);
+    const minX = Math.min(...x), maxX = Math.max(...x);
+    const minY = Math.min(...y), maxY = Math.max(...y);
+    const pad = 20;
+
+    // Glow box
+    ctx.shadowColor = "#00c6ff";
+    ctx.shadowBlur = 12;
+    ctx.strokeStyle = "#00c6ff";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.roundRect(minX - pad, minY - pad, (maxX - minX) + pad * 2, (maxY - minY) + pad * 2, 8);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Landmark dots
+    ctx.fillStyle = "rgba(0,198,255,0.8)";
+    landmarks.forEach(l => {
+        ctx.beginPath();
+        ctx.arc(l.x * w, l.y * h, 3, 0, Math.PI * 2);
+        ctx.fill();
+    });
+}
+
+// ── PROCESS LANDMARKS ──
 function processLandmarks(landmarks) {
     const wrist = landmarks[0];
     let coords = [];
@@ -61,96 +125,83 @@ function processLandmarks(landmarks) {
     return coords.map(c => c / maxVal);
 }
 
+// ── INFERENCE ──
 async function runInference(landmarks) {
     const inputData = processLandmarks(landmarks);
     const inputTensor = tf.tensor2d(inputData, [1, 63]);
     const prediction = model.predict(inputTensor);
     const scores = await prediction.data();
-    let maxIdx = scores.indexOf(Math.max(...scores));
-    const detectedLabel = labelMap[maxIdx];
+    const maxIdx = scores.indexOf(Math.max(...scores));
+    const confidence = scores[maxIdx];
+    const label = labelMap[maxIdx];
 
-    if (scores[maxIdx] > 0.75 && detectedLabel !== "Blank") {
-        alphabetBox.value = detectedLabel;
-        currentPrediction = detectedLabel;
+    if (confidence > 0.75 && label !== "Blank") {
+        currentPrediction = label;
+        window.currentPrediction = label;
+        if (window.updatePrediction) window.updatePrediction(label, confidence);
     } else {
-        alphabetBox.value = "---";
         currentPrediction = "";
+        window.currentPrediction = "";
+        if (window.updatePrediction) window.updatePrediction("", 0);
     }
+
     inputTensor.dispose();
     prediction.dispose();
 }
 
-// WEBCAM LOOP
+// ── LIVE WEBCAM LOOP ──
 async function predictWebcam() {
-    // Only run webcam loop if we aren't displaying an uploaded image
-    if (!isUsingUpload && video.currentTime !== lastVideoTime) {
-        canvas.width = video.videoWidth; 
-        canvas.height = video.videoHeight;
+    if (activeMode !== 'live') return;
+
+    if (video.currentTime !== lastVideoTime) {
+        liveCanvas.width = video.videoWidth;
+        liveCanvas.height = video.videoHeight;
         lastVideoTime = video.currentTime;
+
         const result = handLandmarker.detectForVideo(video, performance.now());
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        liveCtx.clearRect(0, 0, liveCanvas.width, liveCanvas.height);
+
         if (result.landmarks && result.landmarks.length > 0) {
-            drawUI(result.landmarks[0]);
+            drawLandmarkBox(liveCtx, result.landmarks[0], liveCanvas.width, liveCanvas.height);
             await runInference(result.landmarks[0]);
+        } else {
+            currentPrediction = "";
+            window.currentPrediction = "";
+            if (window.updatePrediction) window.updatePrediction("", 0);
         }
     }
-    window.requestAnimationFrame(predictWebcam);
+
+    if (activeMode === 'live') {
+        window.requestAnimationFrame(predictWebcam);
+    }
 }
 
-// IMAGE UPLOAD HANDLER
-imageUpload.addEventListener("change", async (event) => {
+// ── IMAGE UPLOAD INFERENCE ──
+document.getElementById("imageUpload").addEventListener("change", async (event) => {
     const file = event.target.files[0];
-    if (!file) return;
-
-    isUsingUpload = true; // Stop webcam processing
-    clearCanvasBtn.style.display = "flex"; // Show the delete icon
+    if (!file || !handLandmarker) return;
 
     const img = new Image();
     img.src = URL.createObjectURL(file);
     img.onload = async () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-
+        // The display canvas is handled by index.html
+        // We run inference on the original image
         await handLandmarker.setOptions({ runningMode: "IMAGE" });
         const result = await handLandmarker.detect(img);
+
         if (result.landmarks && result.landmarks.length > 0) {
-            drawUI(result.landmarks[0]);
+            // Draw box on image_canvas after it's been drawn by index.html
+            setTimeout(() => {
+                const ctx2 = imageCanvas.getContext('2d');
+                drawLandmarkBox(ctx2, result.landmarks[0], imageCanvas.width, imageCanvas.height);
+            }, 100);
             await runInference(result.landmarks[0]);
-            // NOTICE: I removed the wordBox.value update here. 
-            // The user must now click "Add Letter" manually.
+        } else {
+            if (window.updatePrediction) window.updatePrediction("", 0);
         }
+
         await handLandmarker.setOptions({ runningMode: "VIDEO" });
     };
-});
-
-// NEW: CLEAR IMAGE ICON LOGIC
-clearCanvasBtn.addEventListener("click", () => {
-    isUsingUpload = false; // Restart webcam loop
-    clearCanvasBtn.style.display = "none";
-    imageUpload.value = ""; // Reset file input
-    alphabetBox.value = "";
-    currentPrediction = "";
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-});
-
-// BUTTONS
-document.getElementById("submitBtn").addEventListener("click", () => {
-    if (currentPrediction) wordBox.value += currentPrediction;
-});
-
-document.getElementById("clearBtn").addEventListener("click", () => {
-    wordBox.value = ""; sentenceBox.value = ""; alphabetBox.value = ""; currentPrediction = "";
-});
-
-document.getElementById("generateBtn").addEventListener("click", () => {
-    const word = wordBox.value;
-    if (word) {
-        sentenceBox.value = `The user signed: ${word}`;
-        const speech = new SpeechSynthesisUtterance(word);
-        window.speechSynthesis.speak(speech);
-    }
 });
 
 initialize();
