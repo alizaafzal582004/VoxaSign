@@ -1,4 +1,4 @@
-<h1 align="center">🤟 Voxasign </h1>
+<h1 align="center"> Voxasign </h1>
 <h3 align="center">AI-Powered Real-Time Sign Language → Text → Speech</h3>
 
 <p align="center">
