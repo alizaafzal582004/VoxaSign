@@ -1,0 +1,5 @@
+venv/
+dataset/
+__pycache__/
+*.mp3
+.DS_Store

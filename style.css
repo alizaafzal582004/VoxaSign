@@ -1,0 +1,235 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Container */
+.container {
+    width: 95%;
+    max-width: 1200px;
+    padding: 20px;
+}
+
+/* Title */
+.title {
+    text-align: center;
+    color: white;
+    margin-bottom: 20px;
+    font-weight: 600;
+    font-size: 2rem;
+}
+
+/* Dashboard Layout */
+.dashboard {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 25px;
+}
+
+/* Left Panel containing Video and Upload */
+.left-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Video Card */
+.video-card {
+    position: relative;
+    height: 500px;
+    border-radius: 24px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+video, canvas {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* --- NEW: Upload Card Styling --- */
+.upload-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.upload-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #00c6ff;
+}
+
+.upload-btn {
+    display: inline-block;
+    padding: 12px 25px;
+    background: white;
+    color: #1e3c72;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-bottom: 8px;
+}
+
+.upload-btn:hover {
+    background: #00c6ff;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.upload-tip {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+}
+
+/* Controls Card */
+.controls-card {
+    backdrop-filter: blur(25px);
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    padding: 25px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    height: fit-content;
+}
+
+/* Inputs */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #00c6ff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+input {
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 18px;
+    outline: none;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+input:focus {
+    border-color: #00c6ff;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Buttons */
+button {
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-family: "Poppins", sans-serif;
+}
+
+/* Primary Button */
+#submitBtn {
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    color: white;
+    font-size: 16px;
+    box-shadow: 0 8px 20px rgba(0, 114, 255, 0.3);
+}
+
+#submitBtn:hover {
+    transform: scale(1.03);
+    box-shadow: 0 10px 25px rgba(0, 114, 255, 0.5);
+}
+
+/* Secondary Buttons */
+.btn-row {
+    display: flex;
+    gap: 12px;
+}
+
+#clearBtn {
+    flex: 1;
+    background: rgba(255, 77, 77, 0.2);
+    color: #ff4d4d;
+    border: 1px solid rgba(255, 77, 77, 0.3);
+}
+
+#generateBtn {
+    flex: 1;
+    background: rgba(0, 208, 132, 0.2);
+    color: #00d084;
+    border: 1px solid rgba(0, 208, 132, 0.3);
+}
+
+#clearBtn:hover {
+    background: #ff4d4d;
+    color: white;
+}
+#clearCanvasBtn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: rgba(231, 76, 60, 0.8); /* Red tint */
+    color: white;
+    border: none;
+    cursor: pointer;
+    z-index: 10;
+    display: none; /* Hidden by default, show when image is uploaded */
+    font-weight: bold;
+    align-items: center;
+    justify-content: center;
+}
+
+#clearCanvasBtn:hover {
+    background: #e74c3c;
+    transform: scale(1.1);
+}
+
+#generateBtn:hover {
+    background: #00d084;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 950px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .video-card {
+        height: 350px;
+    }
+}

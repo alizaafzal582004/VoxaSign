@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voxasign — Gesture Studio</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Nunito:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.mjs"
+      type="module"
+    ></script>
+    <style>
+      :root {
+        --bg-dark: #020617;
+        --card-glass: rgba(15, 23, 42, 0.8);
+        --electric-blue: #38bdf8;
+        --blue-glow: rgba(56, 189, 248, 0.2);
+        --text-bright: #f1f5f9;
+        --text-muted: #94a3b8;
+        --border-glass: rgba(255, 255, 255, 0.1);
+        --danger: #ef4444;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Nunito", sans-serif;
+        background: var(--bg-dark);
+        background-image:
+          radial-gradient(at 0% 0%, hsla(217, 100%, 12%, 1) 0, transparent 50%),
+          radial-gradient(
+            at 100% 100%,
+            hsla(200, 100%, 10%, 1) 0,
+            transparent 50%
+          );
+        min-height: 100vh;
+        color: var(--text-bright);
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 20px;
+        background: var(--card-glass);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border-glass);
+      }
+
+      .logo-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .logo-name {
+        font-family: "Lora", serif;
+        font-size: 1.3rem;
+        font-weight: 600;
+      }
+      .logo-box {
+        display: flex;
+        align-items: center;
+        gap: 15px; /* Creates space between the icon and the text */
+      }
+
+      .logo-icon {
+        width: 45px;
+        height: 45px;
+        background: var(--blue-glow);
+        border: 1.5px solid var(--electric-blue);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--electric-blue); /* Sets the SVG color */
+        box-shadow: 0 0 20px var(--blue-glow);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      .logo-box:hover .logo-icon {
+        transform: scale(1.1) rotate(3deg);
+        background: rgba(56, 189, 248, 0.3);
+        box-shadow: 0 0 30px var(--blue-glow);
+      }
+
+      .logo-icon svg {
+        width: 24px;
+        height: 24px;
+      }
+      .logo-name span {
+        color: var(--electric-blue);
+      }
+
+      .btn-ref {
+        background: var(--blue-glow);
+        border: 1px solid var(--electric-blue);
+        color: var(--electric-blue);
+        padding: 8px 15px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      main {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 380px; /* Desktop Layout */
+        gap: 20px;
+        padding: 20px;
+        max-width: 1500px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .glass-panel {
+        background: var(--card-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: 24px;
+        padding: 20px;
+        backdrop-filter: blur(20px);
+      }
+
+      .source-toggle {
+        display: flex;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 5px;
+        border-radius: 14px;
+        margin-bottom: 15px;
+        border: 1px solid var(--border-glass);
+      }
+
+      .toggle-btn {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        font-weight: 700;
+        cursor: pointer;
+        border-radius: 10px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .toggle-btn.active {
+        background: var(--electric-blue);
+        color: var(--bg-dark);
+        box-shadow: 0 4px 12px var(--blue-glow);
+      }
+
+      .workspace-card {
+        position: relative;
+        height: 400px; /* Reduced for better mobile fit */
+        background: #000;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid var(--border-glass);
+      }
+
+      #webcam,
+      #output_canvas,
+      #image_canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      #placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 5;
+        background: var(--bg-dark);
+        text-align: center;
+        padding: 20px;
+      }
+
+      #liveView,
+      #uploadView {
+        display: none;
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+      #liveView.visible,
+      #uploadView.visible {
+        display: block;
+      }
+
+      .drop-zone {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        cursor: pointer;
+        border: 2px dashed var(--border-glass);
+        margin: 15px;
+        border-radius: 15px;
+      }
+
+      .floating-actions {
+        position: absolute;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: none;
+        gap: 10px;
+        background: rgba(15, 23, 42, 0.9);
+        padding: 8px 16px;
+        border-radius: 50px;
+        border: 1px solid var(--electric-blue);
+        z-index: 10;
+      }
+
+      .icon-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 1px solid var(--border-glass);
+        background: var(--card-glass);
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .pred-box {
+        text-align: center;
+      }
+      #predBox {
+        font-family: "Lora", serif;
+        font-size: 4rem;
+        color: var(--electric-blue);
+        line-height: 1.2;
+      }
+
+      .conf-track {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        margin: 12px 0;
+        overflow: hidden;
+      }
+      .conf-fill {
+        height: 100%;
+        width: 0%;
+        background: var(--electric-blue);
+        transition: 0.4s;
+      }
+
+      .add-btn {
+        width: 100%;
+        background: var(--electric-blue);
+        color: var(--bg-dark);
+        padding: 14px;
+        border-radius: 14px;
+        border: none;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .word-area {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 15px;
+        border-radius: 16px;
+        min-height: 50px;
+        font-family: "Lora";
+        font-size: 1.4rem;
+        color: var(--electric-blue);
+        border: 1px solid var(--border-glass);
+      }
+
+      .btn-sec {
+        flex: 1;
+        padding: 10px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1px solid;
+        font-size: 14px;
+      }
+      .btn-clr {
+        border-color: var(--danger);
+        color: var(--danger);
+        background: transparent;
+      }
+      .btn-spk {
+        border-color: var(--electric-blue);
+        color: var(--electric-blue);
+        background: var(--blue-glow);
+      }
+
+      .ws-corner {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: var(--electric-blue);
+        color: var(--bg-dark);
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 800;
+        z-index: 10;
+        display: none;
+      }
+
+      footer {
+        text-align: center;
+        padding: 20px;
+        font-size: 11px;
+        color: var(--text-muted);
+        opacity: 0.7;
+      }
+
+      /* 📱 MOBILE RESPONSIVE LOGIC */
+      @media (max-width: 1024px) {
+        main {
+          grid-template-columns: 1fr; /* Switch to single column */
+          padding: 15px;
+        }
+
+        .workspace-card {
+          height: 350px; /* Shorter for mobile screens */
+        }
+
+        #predBox {
+          font-size: 3.5rem;
+        }
+
+        .logo-name {
+          font-size: 1.1rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        header {
+          padding: 12px 15px;
+        }
+
+        .btn-ref {
+          padding: 6px 10px;
+          font-size: 10px;
+        }
+
+        .toggle-btn {
+          font-size: 12px;
+          padding: 8px;
+        }
+
+        .glass-panel {
+          padding: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="logo-box">
+        <div class="logo-icon">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
+            <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
+            <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
+            <path
+              d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"
+            />
+          </svg>
+        </div>
+        <div class="logo-name">Voxa<span>sign</span></div>
+      </div>
+      <button class="btn-ref" onclick="window.open('img.png', '_blank')">
+        📖 Alphabet Reference
+      </button>
+    </header>
+
+    <main>
+      <div style="display: flex; flex-direction: column; gap: 20px">
+        <div class="source-toggle">
+          <button class="toggle-btn" id="liveTile">
+            <span>📷</span> Live Camera
+          </button>
+          <button class="toggle-btn" id="uploadTile">
+            <span>🖼️</span> Upload Photo
+          </button>
+        </div>
+
+        <div class="glass-panel workspace-card">
+          <div class="ws-corner" id="wsCorner">LIVE</div>
+
+          <div id="placeholder">
+            <span style="font-size: 50px; margin-bottom: 10px">👋</span>
+            <p style="color: var(--text-muted)">Select a source to start</p>
+          </div>
+
+          <div id="liveView">
+            <video id="webcam" autoplay playsinline></video>
+            <canvas id="output_canvas"></canvas>
+          </div>
+
+          <div id="uploadView">
+            <label class="drop-zone" id="dropZone" for="imageUpload">
+              <span style="font-size: 40px; margin-bottom: 10px">📂</span>
+              <p>Click to browse gesture image</p>
+              <input type="file" id="imageUpload" accept="image/*" hidden />
+            </label>
+            <canvas id="image_canvas"></canvas>
+
+            <div class="floating-actions" id="uploadActionsBar">
+              <button
+                class="icon-btn"
+                onclick="document.getElementById('imageUpload').click()"
+              >
+                ➕
+              </button>
+              <button
+                class="icon-btn"
+                id="clearCanvasBtn"
+                style="color: var(--danger)"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 20px">
+        <div class="glass-panel pred-box">
+          <span
+            style="
+              font-size: 10px;
+              color: var(--text-muted);
+              letter-spacing: 2px;
+              text-transform: uppercase;
+            "
+            >Inference</span
+          >
+          <div id="predBox">–</div>
+          <div class="conf-track">
+            <div class="conf-fill" id="confFill"></div>
+          </div>
+          <div id="confText" style="font-size: 12px; color: var(--text-muted)">
+            Awaiting hand...
+          </div>
+        </div>
+
+        <div class="glass-panel">
+          <button class="add-btn" id="submitBtn">ADD TO WORD</button>
+          <div style="margin: 20px 0">
+            <span
+              style="
+                font-size: 10px;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                margin-bottom: 8px;
+                display: block;
+              "
+              >Translation</span
+            >
+            <div class="word-area empty" id="wordArea">Start signing…</div>
+          </div>
+          <div style="display: flex; gap: 12px">
+            <button class="btn-sec btn-clr" id="clearBtn">Clear</button>
+            <button class="btn-sec btn-spk" id="generateBtn">Speak 🔊</button>
+          </div>
+        </div>
+
+        <div class="glass-panel" style="padding: 15px 24px">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            "
+          >
+            <div style="text-align: center; flex: 1">
+              <div
+                id="statL"
+                style="
+                  font-size: 1.2rem;
+                  font-weight: 700;
+                  color: var(--electric-blue);
+                "
+              >
+                0
+              </div>
+              <div style="font-size: 9px; color: var(--text-muted)">
+                LETTERS
+              </div>
+            </div>
+            <div
+              style="
+                text-align: center;
+                flex: 1;
+                border-left: 1px solid var(--border-glass);
+                border-right: 1px solid var(--border-glass);
+              "
+            >
+              <div
+                id="statW"
+                style="
+                  font-size: 1.2rem;
+                  font-weight: 700;
+                  color: var(--electric-blue);
+                "
+              >
+                0
+              </div>
+              <div style="font-size: 9px; color: var(--text-muted)">WORDS</div>
+            </div>
+            <div style="text-align: center; flex: 1">
+              <div
+                id="statC"
+                style="
+                  font-size: 1.2rem;
+                  font-weight: 700;
+                  color: var(--electric-blue);
+                "
+              >
+                —
+              </div>
+              <div style="font-size: 9px; color: var(--text-muted)">
+                ACCURACY
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="outputArea" style="display: none"></div>
+      </div>
+    </main>
+
+    <footer>Voxasign — AI Gesture Studio</footer>
+
+    <script src="script.js" type="module"></script>
+    <script>
+      const liveTile = document.getElementById("liveTile");
+      const uploadTile = document.getElementById("uploadTile");
+      const liveView = document.getElementById("liveView");
+      const uploadView = document.getElementById("uploadView");
+      const placeholder = document.getElementById("placeholder");
+      const wsCorner = document.getElementById("wsCorner");
+      const clearBtn2 = document.getElementById("clearCanvasBtn");
+      const imageUpload = document.getElementById("imageUpload");
+      const imageCanvas = document.getElementById("image_canvas");
+      const dropZone = document.getElementById("dropZone");
+      const actionsBar = document.getElementById("uploadActionsBar");
+
+      let activeMode = null;
+      let letterCount = 0,
+        wordCount = 0;
+      let wordBuffer = "";
+
+      function setMode(mode) {
+        activeMode = mode;
+        liveTile.classList.toggle("active", mode === "live");
+        uploadTile.classList.toggle("active", mode === "upload");
+        placeholder.style.display = "none";
+        liveView.classList.toggle("visible", mode === "live");
+        uploadView.classList.toggle("visible", mode === "upload");
+        wsCorner.style.display = "block";
+        wsCorner.textContent = mode === "live" ? "● LIVE" : "📁 PHOTO";
+        if (mode === "upload") {
+          imageUpload.click();
+        }
+        window.dispatchEvent(new CustomEvent("modeChange", { detail: mode }));
+        if (mode === "live") actionsBar.style.display = "none";
+      }
+
+      liveTile.addEventListener("click", () => {
+        if (activeMode !== "live") setMode("live");
+      });
+      uploadTile.addEventListener("click", () => {
+        if (activeMode !== "upload") setMode("upload");
+      });
+
+      window.updatePrediction = function (letter, confidence) {
+        const box = document.getElementById("predBox");
+        const fill = document.getElementById("confFill");
+        const txt = document.getElementById("confText");
+        const cs = document.getElementById("statC");
+        if (letter && letter !== "---") {
+          box.textContent = letter;
+          const pct = Math.round(confidence * 100);
+          fill.style.width = pct + "%";
+          txt.textContent = pct + "% confidence";
+          cs.textContent = pct + "%";
+        } else {
+          box.textContent = "–";
+          fill.style.width = "0%";
+          txt.textContent = "No hand detected";
+          cs.textContent = "—";
+        }
+      };
+
+      function setWord(word) {
+        wordBuffer = word;
+        const wa = document.getElementById("wordArea");
+        if (word) {
+          wa.textContent = word;
+          wa.classList.remove("empty");
+        } else {
+          wa.textContent = "Start signing…";
+          wa.classList.add("empty");
+        }
+      }
+
+      document.getElementById("submitBtn").addEventListener("click", () => {
+        const p = window.currentPrediction || "";
+        if (!p) return;
+        setWord(wordBuffer + p);
+        letterCount++;
+        document.getElementById("statL").textContent = letterCount;
+      });
+
+      document.getElementById("clearBtn").addEventListener("click", () => {
+        setWord("");
+        letterCount = 0;
+        wordCount = 0;
+        document.getElementById("statL").textContent = 0;
+        document.getElementById("statW").textContent = 0;
+        document.getElementById("statC").textContent = "—";
+        window.updatePrediction("", 0);
+        if (window.clearCurrentPrediction) window.clearCurrentPrediction();
+      });
+
+      document.getElementById("generateBtn").addEventListener("click", () => {
+        if (!wordBuffer) return;
+        wordCount++;
+        document.getElementById("statW").textContent = wordCount;
+        const utterance = new SpeechSynthesisUtterance(
+          wordBuffer.toLowerCase(),
+        );
+        utterance.lang = "en-US";
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      });
+
+      clearBtn2.addEventListener("click", () => {
+        imageUpload.value = "";
+        imageCanvas.style.display = "none";
+        dropZone.style.display = "flex";
+        actionsBar.style.display = "none";
+        window.updatePrediction("", 0);
+        if (window.clearCurrentPrediction) window.clearCurrentPrediction();
+      });
+
+      imageUpload.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+          imageCanvas.width = img.width;
+          imageCanvas.height = img.height;
+          imageCanvas.getContext("2d").drawImage(img, 0, 0);
+          dropZone.style.display = "none";
+          imageCanvas.style.display = "block";
+          actionsBar.style.display = "flex";
+        };
+      });
+    </script>
+  </body>
+</html>

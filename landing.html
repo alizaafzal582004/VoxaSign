@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voxasign — Professional Gesture Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Lora:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #38bdf8;
+            --primary-glow: rgba(56, 189, 248, 0.3);
+            --bg: #020617;
+            --card: #0f172a;
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text-main); line-height: 1.6; overflow-x: hidden; scroll-behavior: smooth; }
+
+        /* --- IDENTICAL STUDIO BRANDING --- */
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 8%; background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
+        }
+
+        .logo-box { display: flex; align-items: center; gap: 15px; text-decoration: none; color: inherit; }
+        
+        .logo-icon {
+            width: 45px; height: 45px;
+            background: var(--primary-glow);
+            border: 1.5px solid var(--primary);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--primary);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .logo-name { font-family: 'Lora', serif; font-size: 1.6rem; font-weight: 600; }
+        .logo-name span { color: var(--primary); }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding: 0 10%; background: radial-gradient(circle at 50% 50%, #0c4a6e 0%, transparent 50%);
+        }
+
+        .hero h1 { font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 800; margin-bottom: 20px; line-height: 1.1; letter-spacing: -2px; }
+        .hero h1 span { color: var(--primary); }
+        .hero p { font-size: 1.2rem; color: var(--text-dim); max-width: 800px; margin-bottom: 40px; }
+
+        .btn-cta {
+            background: var(--primary); color: #000; padding: 18px 45px;
+            border-radius: 99px; font-weight: 800; text-decoration: none;
+            font-size: 1.1rem; box-shadow: 0 10px 30px var(--primary-glow);
+            transition: 0.3s;
+        }
+        .btn-cta:hover { transform: scale(1.05); background: #fff; }
+
+        /* --- LEARNING & TUTORIAL SECTION --- */
+        .section-header { text-align: center; padding: 80px 0 20px; }
+        .section-header h2 { font-family: 'Lora'; font-size: 2.5rem; }
+
+        .tutorial-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px; padding: 40px 8% 100px;
+        }
+
+        .tutorial-card {
+            background: var(--card); border: 1px solid var(--border);
+            padding: 40px; border-radius: 28px; transition: 0.3s;
+        }
+        .tutorial-card:hover { border-color: var(--primary); transform: translateY(-10px); }
+        .tutorial-card h3 { color: var(--primary); margin-bottom: 15px; font-size: 1.5rem; }
+        .tutorial-card p { color: var(--text-dim); font-size: 0.95rem; }
+
+        /* --- VISUALS --- */
+        .img-container { width: 100%; max-width: 900px; margin: 40px auto; border-radius: 24px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .img-container img { width: 100%; display: block; }
+
+        footer { text-align: center; padding: 60px; border-top: 1px solid var(--border); color: #475569; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="logo-box">
+        <div class="logo-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
+                <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
+                <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
+                <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
+            </svg>
+        </div>
+        <div class="logo-name">Voxa<span>sign</span></div>
+    </div>
+    <a href="index.html" class="btn-cta" style="padding: 10px 25px; font-size: 0.9rem;">Enter Studio</a>
+</nav>
+
+<section class="hero">
+    <div style="color: var(--primary); font-weight: 800; letter-spacing: 2px; font-size: 12px; margin-bottom: 10px; text-transform: uppercase;">The Future of Communication</div>
+    <h1>Master ASL with <span>Real-Time AI.</span></h1>
+    <p>Voxasign is a SaaS-first platform designed to teach and translate Sign Language using advanced Edge-AI. Bridge the gap, learn the signs, and start communicating today.</p>
+    <a href="#learn" class="btn-cta">Start Your Journey</a>
+</section>
+
+<div class="section-header" id="learn">
+    <span style="color: var(--primary); font-weight: 800;">01 / CURRICULUM</span>
+    <h2>The Sign Academy</h2>
+</div>
+
+<div class="img-container">
+    
+
+[Image of the American Sign Language alphabet chart]
+
+</div>
+
+<section class="tutorial-grid">
+    <div class="tutorial-card">
+        <h3>1. Study</h3>
+        <p>Use the reference guide above to understand hand orientations. Each joint position is a data point for our neural network.</p>
+    </div>
+    <div class="tutorial-card">
+        <h3>2. Practice</h3>
+        <p>Launch the studio and allow camera access. Our AI tracks 21 hand landmarks to validate your accuracy in real-time.</p>
+        
+    </div>
+    <div class="tutorial-card">
+        <h3>3. Validate</h3>
+        <p>Construct words and sentences. Use the "Vocalize" feature to turn your signs into audible speech instantly.</p>
+    </div>
+</section>
+
+<section style="background: var(--card); padding: 100px 8%; text-align: center;">
+    <h2 style="margin-bottom: 20px;">Ready to test your <span>skills?</span></h2>
+    <p style="color: var(--text-dim); margin-bottom: 40px;">Join the challenge on LinkedIn. Complete your first word and get your accuracy rating!</p>
+    <a href="index.html" class="btn-cta" style="padding: 20px 60px; font-size: 1.3rem;">Launch Voxasign Studio 🤟</a>
+</section>
+
+<footer>
+    &copy; 2026 Voxasign SaaS Studio. Developed for the Samsung Innovation Pitch.
+</footer>
+
+</body>
+</html>
