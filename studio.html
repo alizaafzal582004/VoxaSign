@@ -23,7 +23,6 @@
         --text-muted: #94a3b8;
         --border-glass: rgba(255, 255, 255, 0.1);
         --danger: #ef4444;
-        --ai-purple: #a855f7;
       }
 
       * {
@@ -61,13 +60,17 @@
       .logo-box {
         display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 8px;
       }
-
       .logo-name {
         font-family: "Lora", serif;
         font-size: 1.3rem;
         font-weight: 600;
+      }
+      .logo-box {
+        display: flex;
+        align-items: center;
+        gap: 15px; /* Creates space between the icon and the text */
       }
 
       .logo-icon {
@@ -79,7 +82,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--electric-blue);
+        color: var(--electric-blue); /* Sets the SVG color */
         box-shadow: 0 0 20px var(--blue-glow);
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }
@@ -90,6 +93,10 @@
         box-shadow: 0 0 30px var(--blue-glow);
       }
 
+      .logo-icon svg {
+        width: 24px;
+        height: 24px;
+      }
       .logo-name span {
         color: var(--electric-blue);
       }
@@ -108,7 +115,7 @@
       main {
         flex: 1;
         display: grid;
-        grid-template-columns: 1fr 380px;
+        grid-template-columns: 1fr 380px; /* Desktop Layout */
         gap: 20px;
         padding: 20px;
         max-width: 1500px;
@@ -157,14 +164,16 @@
 
       .workspace-card {
         position: relative;
-        height: 400px;
+        height: 400px; /* Reduced for better mobile fit */
         background: #000;
         border-radius: 20px;
         overflow: hidden;
         border: 1px solid var(--border-glass);
       }
 
-      #webcam, #output_canvas, #image_canvas {
+      #webcam,
+      #output_canvas,
+      #image_canvas {
         position: absolute;
         inset: 0;
         width: 100%;
@@ -185,14 +194,15 @@
         padding: 20px;
       }
 
-      #liveView, #uploadView {
+      #liveView,
+      #uploadView {
         display: none;
         width: 100%;
         height: 100%;
         position: relative;
       }
-
-      #liveView.visible, #uploadView.visible {
+      #liveView.visible,
+      #uploadView.visible {
         display: block;
       }
 
@@ -238,7 +248,6 @@
       .pred-box {
         text-align: center;
       }
-
       #predBox {
         font-family: "Lora", serif;
         font-size: 4rem;
@@ -253,7 +262,6 @@
         margin: 12px 0;
         overflow: hidden;
       }
-
       .conf-fill {
         height: 100%;
         width: 0%;
@@ -270,7 +278,6 @@
         border: none;
         font-weight: 800;
         cursor: pointer;
-        margin-bottom: 15px;
       }
 
       .word-area {
@@ -292,14 +299,17 @@
         cursor: pointer;
         border: 1px solid;
         font-size: 14px;
-        transition: 0.3s;
       }
-
-      .btn-clr { border-color: var(--danger); color: var(--danger); background: transparent; }
-      .btn-spk { border-color: var(--electric-blue); color: var(--electric-blue); background: var(--blue-glow); }
-      .btn-ai { border-color: var(--ai-purple); color: var(--ai-purple); background: rgba(168, 85, 247, 0.1); }
-      
-      .btn-sec:disabled { opacity: 0.5; cursor: not-allowed; }
+      .btn-clr {
+        border-color: var(--danger);
+        color: var(--danger);
+        background: transparent;
+      }
+      .btn-spk {
+        border-color: var(--electric-blue);
+        color: var(--electric-blue);
+        background: var(--blue-glow);
+      }
 
       .ws-corner {
         position: absolute;
@@ -323,9 +333,44 @@
         opacity: 0.7;
       }
 
+      /* 📱 MOBILE RESPONSIVE LOGIC */
       @media (max-width: 1024px) {
-        main { grid-template-columns: 1fr; padding: 15px; }
-        .workspace-card { height: 350px; }
+        main {
+          grid-template-columns: 1fr; /* Switch to single column */
+          padding: 15px;
+        }
+
+        .workspace-card {
+          height: 350px; /* Shorter for mobile screens */
+        }
+
+        #predBox {
+          font-size: 3.5rem;
+        }
+
+        .logo-name {
+          font-size: 1.1rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        header {
+          padding: 12px 15px;
+        }
+
+        .btn-ref {
+          padding: 6px 10px;
+          font-size: 10px;
+        }
+
+        .toggle-btn {
+          font-size: 12px;
+          padding: 8px;
+        }
+
+        .glass-panel {
+          padding: 15px;
+        }
       }
     </style>
   </head>
@@ -333,11 +378,22 @@
     <header>
       <div class="logo-box">
         <div class="logo-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
             <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
             <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
-            <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
+            <path
+              d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"
+            />
           </svg>
         </div>
         <div class="logo-name">Voxa<span>sign</span></div>
@@ -350,20 +406,27 @@
     <main>
       <div style="display: flex; flex-direction: column; gap: 20px">
         <div class="source-toggle">
-          <button class="toggle-btn" id="liveTile"><span>📷</span> Live Camera</button>
-          <button class="toggle-btn" id="uploadTile"><span>🖼️</span> Upload Photo</button>
+          <button class="toggle-btn" id="liveTile">
+            <span>📷</span> Live Camera
+          </button>
+          <button class="toggle-btn" id="uploadTile">
+            <span>🖼️</span> Upload Photo
+          </button>
         </div>
 
         <div class="glass-panel workspace-card">
           <div class="ws-corner" id="wsCorner">LIVE</div>
+
           <div id="placeholder">
             <span style="font-size: 50px; margin-bottom: 10px">👋</span>
             <p style="color: var(--text-muted)">Select a source to start</p>
           </div>
+
           <div id="liveView">
             <video id="webcam" autoplay playsinline></video>
             <canvas id="output_canvas"></canvas>
           </div>
+
           <div id="uploadView">
             <label class="drop-zone" id="dropZone" for="imageUpload">
               <span style="font-size: 40px; margin-bottom: 10px">📂</span>
@@ -371,9 +434,21 @@
               <input type="file" id="imageUpload" accept="image/*" hidden />
             </label>
             <canvas id="image_canvas"></canvas>
+
             <div class="floating-actions" id="uploadActionsBar">
-              <button class="icon-btn" onclick="document.getElementById('imageUpload').click()">➕</button>
-              <button class="icon-btn" id="clearCanvasBtn" style="color: var(--danger)">✕</button>
+              <button
+                class="icon-btn"
+                onclick="document.getElementById('imageUpload').click()"
+              >
+                ➕
+              </button>
+              <button
+                class="icon-btn"
+                id="clearCanvasBtn"
+                style="color: var(--danger)"
+              >
+                ✕
+              </button>
             </div>
           </div>
         </div>
@@ -381,43 +456,107 @@
 
       <div style="display: flex; flex-direction: column; gap: 20px">
         <div class="glass-panel pred-box">
-          <span style="font-size: 10px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase;">Inference</span>
+          <span
+            style="
+              font-size: 10px;
+              color: var(--text-muted);
+              letter-spacing: 2px;
+              text-transform: uppercase;
+            "
+            >Inference</span
+          >
           <div id="predBox">–</div>
           <div class="conf-track">
             <div class="conf-fill" id="confFill"></div>
           </div>
-          <div id="confText" style="font-size: 12px; color: var(--text-muted)">Awaiting hand...</div>
+          <div id="confText" style="font-size: 12px; color: var(--text-muted)">
+            Awaiting hand...
+          </div>
         </div>
 
         <div class="glass-panel">
           <button class="add-btn" id="submitBtn">ADD TO WORD</button>
           <div style="margin: 20px 0">
-            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: block;">Translation</span>
+            <span
+              style="
+                font-size: 10px;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                margin-bottom: 8px;
+                display: block;
+              "
+              >Translation</span
+            >
             <div class="word-area empty" id="wordArea">Start signing…</div>
           </div>
           <div style="display: flex; gap: 12px">
             <button class="btn-sec btn-clr" id="clearBtn">Clear</button>
             <button class="btn-sec btn-spk" id="generateBtn">Speak 🔊</button>
-            <button class="btn-sec btn-ai" id="aiContextBtn">AI Context ✨</button>
           </div>
         </div>
 
         <div class="glass-panel" style="padding: 15px 24px">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            "
+          >
             <div style="text-align: center; flex: 1">
-              <div id="statL" style="font-size: 1.2rem; font-weight: 700; color: var(--electric-blue);">0</div>
-              <div style="font-size: 9px; color: var(--text-muted)">LETTERS</div>
+              <div
+                id="statL"
+                style="
+                  font-size: 1.2rem;
+                  font-weight: 700;
+                  color: var(--electric-blue);
+                "
+              >
+                0
+              </div>
+              <div style="font-size: 9px; color: var(--text-muted)">
+                LETTERS
+              </div>
             </div>
-            <div style="text-align: center; flex: 1; border-left: 1px solid var(--border-glass); border-right: 1px solid var(--border-glass);">
-              <div id="statW" style="font-size: 1.2rem; font-weight: 700; color: var(--electric-blue);">0</div>
+            <div
+              style="
+                text-align: center;
+                flex: 1;
+                border-left: 1px solid var(--border-glass);
+                border-right: 1px solid var(--border-glass);
+              "
+            >
+              <div
+                id="statW"
+                style="
+                  font-size: 1.2rem;
+                  font-weight: 700;
+                  color: var(--electric-blue);
+                "
+              >
+                0
+              </div>
               <div style="font-size: 9px; color: var(--text-muted)">WORDS</div>
             </div>
             <div style="text-align: center; flex: 1">
-              <div id="statC" style="font-size: 1.2rem; font-weight: 700; color: var(--electric-blue);">—</div>
-              <div style="font-size: 9px; color: var(--text-muted)">ACCURACY</div>
+              <div
+                id="statC"
+                style="
+                  font-size: 1.2rem;
+                  font-weight: 700;
+                  color: var(--electric-blue);
+                "
+              >
+                —
+              </div>
+              <div style="font-size: 9px; color: var(--text-muted)">
+                ACCURACY
+              </div>
             </div>
           </div>
         </div>
+
+        <div id="outputArea" style="display: none"></div>
       </div>
     </main>
 
@@ -436,10 +575,10 @@
       const imageCanvas = document.getElementById("image_canvas");
       const dropZone = document.getElementById("dropZone");
       const actionsBar = document.getElementById("uploadActionsBar");
-      const aiBtn = document.getElementById("aiContextBtn");
 
       let activeMode = null;
-      let letterCount = 0, wordCount = 0;
+      let letterCount = 0,
+        wordCount = 0;
       let wordBuffer = "";
 
       function setMode(mode) {
@@ -451,13 +590,19 @@
         uploadView.classList.toggle("visible", mode === "upload");
         wsCorner.style.display = "block";
         wsCorner.textContent = mode === "live" ? "● LIVE" : "📁 PHOTO";
-        if (mode === "upload") imageUpload.click();
+        if (mode === "upload") {
+          imageUpload.click();
+        }
         window.dispatchEvent(new CustomEvent("modeChange", { detail: mode }));
         if (mode === "live") actionsBar.style.display = "none";
       }
 
-      liveTile.addEventListener("click", () => { if (activeMode !== "live") setMode("live"); });
-      uploadTile.addEventListener("click", () => { if (activeMode !== "upload") setMode("upload"); });
+      liveTile.addEventListener("click", () => {
+        if (activeMode !== "live") setMode("live");
+      });
+      uploadTile.addEventListener("click", () => {
+        if (activeMode !== "upload") setMode("upload");
+      });
 
       window.updatePrediction = function (letter, confidence) {
         const box = document.getElementById("predBox");
@@ -500,7 +645,8 @@
 
       document.getElementById("clearBtn").addEventListener("click", () => {
         setWord("");
-        letterCount = 0; wordCount = 0;
+        letterCount = 0;
+        wordCount = 0;
         document.getElementById("statL").textContent = 0;
         document.getElementById("statW").textContent = 0;
         document.getElementById("statC").textContent = "—";
@@ -512,46 +658,12 @@
         if (!wordBuffer) return;
         wordCount++;
         document.getElementById("statW").textContent = wordCount;
-        const utterance = new SpeechSynthesisUtterance(wordBuffer.toLowerCase());
+        const utterance = new SpeechSynthesisUtterance(
+          wordBuffer.toLowerCase(),
+        );
         utterance.lang = "en-US";
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(utterance);
-      });
-
-      // --- AI Context Feature Integration ---
-      aiBtn.addEventListener("click", async () => {
-        if (!wordBuffer || wordBuffer.length < 2) {
-          alert("Please add at least 2 letters to use AI Context!");
-          return;
-        }
-
-        aiBtn.textContent = "AI Thinking...";
-        aiBtn.disabled = true;
-
-        try {
-          const response = await fetch("/.netlify/functions/get-ai-context", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ wordBuffer: wordBuffer })
-          });
-
-          if (!response.ok) throw new Error("Backend function error");
-
-          const data = await response.json();
-          const aiSentence = data.sentence;
-
-          setWord(aiSentence);
-          
-          const utterance = new SpeechSynthesisUtterance(aiSentence);
-          window.speechSynthesis.cancel();
-          window.speechSynthesis.speak(utterance);
-        } catch (error) {
-          console.error("AI Error:", error);
-          alert("Could not reach the AI Brain. Ensure your Netlify environment variable 'OPENROUTER_KEY' is set.");
-        } finally {
-          aiBtn.textContent = "AI Context ✨";
-          aiBtn.disabled = false;
-        }
       });
 
       clearBtn2.addEventListener("click", () => {
