@@ -16,6 +16,12 @@ let cameraStream = null;
 let currentFacingMode = "user"; // 'user' (front) or 'environment' (back)
 let availableCameras = [];
 
+// Auto-detection state
+let detectionStartTime = null;
+let lastDetectedLetter = "";
+const HOLD_DURATION = 1500; // 1.5 seconds
+const AUTO_CONFIDENCE_THRESHOLD = 0.85; // 85% confidence for auto-add
+
 // Expose prediction to parent UI
 window.currentPrediction = "";
 window.clearCurrentPrediction = () => {
@@ -217,14 +223,72 @@ async function runInference(landmarks) {
         currentPrediction = label;
         window.currentPrediction = label;
         if (window.updatePrediction) window.updatePrediction(label, confidence);
+        
+        // Check for auto-detection
+        checkAutoAdd(label, confidence);
     } else {
         currentPrediction = "";
         window.currentPrediction = "";
         if (window.updatePrediction) window.updatePrediction("", 0);
+        
+        // Reset auto-detection
+        resetAutoDetection();
     }
 
     inputTensor.dispose();
     prediction.dispose();
+}
+
+// ── AUTO-DETECTION LOGIC ──
+function checkAutoAdd(letter, confidence) {
+    // Only in live mode and if auto-detection is enabled
+    if (activeMode !== 'live' || !window.isAutoDetectionEnabled || !window.isAutoDetectionEnabled()) {
+        resetAutoDetection();
+        return;
+    }
+    
+    // Check if confidence is high enough
+    if (confidence < AUTO_CONFIDENCE_THRESHOLD || letter === "Blank") {
+        resetAutoDetection();
+        return;
+    }
+    
+    // Check if same letter as before
+    if (letter === lastDetectedLetter && detectionStartTime !== null) {
+        // Calculate hold time
+        const holdTime = Date.now() - detectionStartTime;
+        const progress = Math.min(holdTime / HOLD_DURATION, 1);
+        
+        // Update progress bar
+        if (window.updateProgressBar) {
+            window.updateProgressBar(progress);
+        }
+        
+        // Auto-add if held long enough
+        if (holdTime >= HOLD_DURATION) {
+            if (window.autoAddLetter && window.autoAddLetter(letter)) {
+                // Successfully added, reset detection
+                resetAutoDetection();
+            }
+        }
+    } else {
+        // New letter detected, start timer
+        lastDetectedLetter = letter;
+        detectionStartTime = Date.now();
+        
+        if (window.updateProgressBar) {
+            window.updateProgressBar(0);
+        }
+    }
+}
+
+function resetAutoDetection() {
+    lastDetectedLetter = "";
+    detectionStartTime = null;
+    
+    if (window.updateProgressBar) {
+        window.updateProgressBar(0);
+    }
 }
 
 // ── LIVE WEBCAM LOOP ──

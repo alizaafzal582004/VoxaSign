@@ -337,6 +337,94 @@
         color: var(--text-muted);
       }
 
+      /* Auto-Detection Mode Styles */
+      .mode-toggle {
+        display: flex;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 5px;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        border: 1px solid var(--border-glass);
+      }
+
+      .mode-btn {
+        flex: 1;
+        padding: 8px 12px;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        font-weight: 600;
+        cursor: pointer;
+        border-radius: 8px;
+        font-size: 13px;
+        transition: all 0.3s ease;
+      }
+
+      .mode-btn.active {
+        background: var(--electric-blue);
+        color: var(--bg-dark);
+        box-shadow: 0 2px 8px var(--blue-glow);
+      }
+
+      .mode-status {
+        text-align: center;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        margin-bottom: 10px;
+        font-size: 11px;
+        color: var(--text-muted);
+        border: 1px solid var(--border-glass);
+      }
+
+      .mode-status.auto-active {
+        background: rgba(56, 189, 248, 0.1);
+        border-color: var(--electric-blue);
+        color: var(--electric-blue);
+      }
+
+      .progress-container {
+        margin-top: 10px;
+        display: none;
+      }
+
+      .progress-container.visible {
+        display: block;
+      }
+
+      .progress-label {
+        font-size: 10px;
+        color: var(--text-muted);
+        margin-bottom: 5px;
+        text-align: center;
+      }
+
+      .progress-bar {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border-glass);
+      }
+
+      .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--electric-blue), #60a5fa);
+        transition: width 0.1s linear;
+        box-shadow: 0 0 10px var(--blue-glow);
+      }
+
+      @keyframes letterAdded {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); background: var(--blue-glow); }
+        100% { transform: scale(1); }
+      }
+
+      .word-area.flash {
+        animation: letterAdded 0.3s ease;
+      }
+
       .ws-corner {
         position: absolute;
         top: 12px;
@@ -513,6 +601,29 @@
         </div>
 
         <div class="glass-panel">
+          <!-- Mode Toggle -->
+          <div class="mode-toggle">
+            <button class="mode-btn active" id="manualModeBtn">
+              ✋ Manual
+            </button>
+            <button class="mode-btn" id="autoModeBtn">
+              ⚡ Auto
+            </button>
+          </div>
+
+          <!-- Mode Status -->
+          <div class="mode-status" id="modeStatus">
+            Click ADD TO WORD to add letter
+          </div>
+
+          <!-- Progress Bar (Auto Mode Only) -->
+          <div class="progress-container" id="progressContainer">
+            <div class="progress-label" id="progressLabel">Hold steady...</div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+          </div>
+
           <button class="add-btn" id="submitBtn">ADD TO WORD</button>
           <button class="btn-backspace" id="backspaceBtn" disabled>⌫ Backspace</button>
           <div style="margin: 20px 0">
@@ -621,12 +732,110 @@
         wordCount = 0;
       let wordBuffer = "";
 
+      // Auto-detection state
+      let autoDetectionEnabled = false;
+      let lastAddedLetter = "";
+      let lastAddTime = 0;
+
       // Function to show/hide camera switch button
       window.updateCameraSwitchButton = function(show) {
         if (cameraSwitchBar) {
           cameraSwitchBar.style.display = show ? "flex" : "none";
         }
       };
+
+      // Function to update progress bar
+      window.updateProgressBar = function(progress) {
+        const progressContainer = document.getElementById("progressContainer");
+        const progressFill = document.getElementById("progressFill");
+        const progressLabel = document.getElementById("progressLabel");
+        
+        if (autoDetectionEnabled && progress > 0) {
+          progressContainer.classList.add("visible");
+          progressFill.style.width = (progress * 100) + "%";
+          
+          if (progress < 1) {
+            progressLabel.textContent = `Hold steady... ${Math.round(progress * 100)}%`;
+          } else {
+            progressLabel.textContent = "Adding letter!";
+          }
+        } else {
+          progressContainer.classList.remove("visible");
+          progressFill.style.width = "0%";
+        }
+      };
+
+      // Function to auto-add letter (called from script.js)
+      window.autoAddLetter = function(letter) {
+        const now = Date.now();
+        const COOLDOWN = 500; // 500ms cooldown
+        
+        // Prevent adding same letter too quickly
+        if (letter === lastAddedLetter && (now - lastAddTime) < COOLDOWN) {
+          return false;
+        }
+        
+        // Add letter to word
+        setWord(wordBuffer + letter);
+        letterCount++;
+        document.getElementById("statL").textContent = letterCount;
+        
+        // Flash animation
+        const wordArea = document.getElementById("wordArea");
+        wordArea.classList.add("flash");
+        setTimeout(() => wordArea.classList.remove("flash"), 300);
+        
+        // Update state
+        lastAddedLetter = letter;
+        lastAddTime = now;
+        
+        console.log(`✨ Auto-added: ${letter}`);
+        return true;
+      };
+
+      // Mode toggle handlers
+      const manualModeBtn = document.getElementById("manualModeBtn");
+      const autoModeBtn = document.getElementById("autoModeBtn");
+      const modeStatus = document.getElementById("modeStatus");
+      const submitBtn = document.getElementById("submitBtn");
+
+      manualModeBtn.addEventListener("click", () => {
+        autoDetectionEnabled = false;
+        manualModeBtn.classList.add("active");
+        autoModeBtn.classList.remove("active");
+        modeStatus.classList.remove("auto-active");
+        modeStatus.textContent = "Click ADD TO WORD to add letter";
+        submitBtn.style.display = "block";
+        window.updateProgressBar(0);
+        
+        // Save preference
+        localStorage.setItem("detectionMode", "manual");
+        console.log("📝 Switched to Manual Mode");
+      });
+
+      autoModeBtn.addEventListener("click", () => {
+        autoDetectionEnabled = true;
+        autoModeBtn.classList.add("active");
+        manualModeBtn.classList.remove("active");
+        modeStatus.classList.add("auto-active");
+        modeStatus.textContent = "⚡ Auto Mode: Hold sign for 1.5s";
+        submitBtn.style.display = "none";
+        
+        // Save preference
+        localStorage.setItem("detectionMode", "auto");
+        console.log("⚡ Switched to Auto Mode");
+      });
+
+      // Expose auto-detection state
+      window.isAutoDetectionEnabled = function() {
+        return autoDetectionEnabled;
+      };
+
+      // Load saved preference
+      const savedMode = localStorage.getItem("detectionMode");
+      if (savedMode === "auto") {
+        autoModeBtn.click();
+      }
 
       function setMode(mode) {
         activeMode = mode;
