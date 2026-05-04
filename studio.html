@@ -311,6 +311,32 @@
         background: var(--blue-glow);
       }
 
+      .btn-backspace {
+        width: 100%;
+        background: transparent;
+        color: var(--electric-blue);
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid var(--electric-blue);
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 10px;
+        transition: all 0.3s ease;
+      }
+
+      .btn-backspace:hover:not(:disabled) {
+        background: var(--blue-glow);
+        transform: translateY(-1px);
+      }
+
+      .btn-backspace:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        border-color: var(--text-muted);
+        color: var(--text-muted);
+      }
+
       .ws-corner {
         position: absolute;
         top: 12px;
@@ -476,6 +502,7 @@
 
         <div class="glass-panel">
           <button class="add-btn" id="submitBtn">ADD TO WORD</button>
+          <button class="btn-backspace" id="backspaceBtn" disabled>⌫ Backspace</button>
           <div style="margin: 20px 0">
             <span
               style="
@@ -623,6 +650,16 @@
         }
       };
 
+      // Helper function to update backspace button state
+      function updateBackspaceButton() {
+        const backspaceBtn = document.getElementById("backspaceBtn");
+        if (wordBuffer && wordBuffer.length > 0) {
+          backspaceBtn.disabled = false;
+        } else {
+          backspaceBtn.disabled = true;
+        }
+      }
+
       function setWord(word) {
         wordBuffer = word;
         const wa = document.getElementById("wordArea");
@@ -633,6 +670,7 @@
           wa.textContent = "Start signing…";
           wa.classList.add("empty");
         }
+        updateBackspaceButton();
       }
 
       document.getElementById("submitBtn").addEventListener("click", () => {
@@ -640,6 +678,26 @@
         if (!p) return;
         setWord(wordBuffer + p);
         letterCount++;
+        document.getElementById("statL").textContent = letterCount;
+      });
+
+      // Backspace button handler
+      const backspaceBtn = document.getElementById("backspaceBtn");
+
+      backspaceBtn.addEventListener("click", () => {
+        // Guard clause: return early if wordBuffer is empty
+        if (!wordBuffer || wordBuffer.length === 0) {
+          return;
+        }
+        
+        // Remove last character using slice
+        const newWord = wordBuffer.slice(0, -1);
+        
+        // Call setWord() with new word value
+        setWord(newWord);
+        
+        // Decrement letter count with underflow protection
+        letterCount = Math.max(0, letterCount - 1);
         document.getElementById("statL").textContent = letterCount;
       });
 

@@ -143,7 +143,7 @@
         </div>
         <div class="logo-name">Voxa<span>sign</span></div>
       </div>
-      <a href="https://voxasign.netlify.app/" class="btn-main" style="padding: 10px 20px; font-size: 0.85rem;">Launch Studio</a>
+      <a href="studio.html" class="btn-main" style="padding: 10px 20px; font-size: 0.85rem;">Launch Studio</a>
     </nav>
 
     <header class="hero">
@@ -171,7 +171,7 @@
       <div class="game-box" id="challenge">
         <h2 style="font-family: Lora; margin-bottom: 20px;">Sign & Win Challenge 🏆</h2>
         <p style="margin-bottom: 25px;">Achieve <b>95% accuracy</b> on any word in the studio, share your results on LinkedIn, and tag us to join the global leaderboard!</p>
-        <a href="https://voxasign.netlify.app/" class="btn-main">Start Your Challenge</a>
+        <a href="studio.html" class="btn-main">Start Your Challenge</a>
       </div>
     </section>
 
@@ -180,15 +180,12 @@
     </footer>
 
     <script>
-      // Automatically generate A-Z cards
       const alphaGrid = document.getElementById('alphaGrid');
       const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
       alphabet.forEach(letter => {
         const card = document.createElement('div');
         card.className = 'alpha-card';
-        // Logic: assumes you have icons named signs/a.png, signs/b.png etc. 
-        // If using external URL, replace the src below.
         card.innerHTML = `
           <img src="signs/${letter.toLowerCase()}.png" alt="Sign ${letter}" onerror="this.src='https://img.icons8.com/ios/50/38bdf8/sign-language-${letter.toLowerCase()}.png'">
           <span>${letter}</span>

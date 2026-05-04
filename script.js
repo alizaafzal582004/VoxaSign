@@ -30,7 +30,9 @@ const labelMap = [
 
 // ── INIT ──
 async function initialize() {
+    console.log("🚀 Initializing VoxaSign...");
     try {
+        console.log("Loading MediaPipe HandLandmarker...");
         const vision = await FilesetResolver.forVisionTasks(
             "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
         );
@@ -41,10 +43,15 @@ async function initialize() {
             runningMode: "VIDEO",
             numHands: 1
         });
+        console.log("✅ MediaPipe HandLandmarker loaded");
+        
+        console.log("Loading TensorFlow model from ./web_model/model.json...");
         model = await tf.loadLayersModel('./web_model/model.json');
-        console.log("✅ AI Engine Ready");
+        console.log("✅ TensorFlow model loaded");
+        console.log("✅ AI Engine Ready - You can now use the app!");
     } catch (error) {
-        console.error("Initialization failed:", error);
+        console.error("❌ Initialization failed:", error);
+        alert("Failed to load AI models. Please check the console for details.\n\nMake sure you're running this from a web server (not file://)");
     }
 }
 
@@ -99,7 +106,8 @@ function drawLandmarkBox(ctx, landmarks, w, h) {
     ctx.strokeStyle = "#00c6ff";
     ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.roundRect(minX - pad, minY - pad, (maxX - minX) + pad * 2, (maxY - minY) + pad * 2, 8);
+    // Use rect instead of roundRect for better browser compatibility
+    ctx.rect(minX - pad, minY - pad, (maxX - minX) + pad * 2, (maxY - minY) + pad * 2);
     ctx.stroke();
     ctx.shadowBlur = 0;
 
@@ -127,6 +135,11 @@ function processLandmarks(landmarks) {
 
 // ── INFERENCE ──
 async function runInference(landmarks) {
+    if (!model) {
+        console.error("Model not loaded yet");
+        return;
+    }
+    
     const inputData = processLandmarks(landmarks);
     const inputTensor = tf.tensor2d(inputData, [1, 63]);
     const prediction = model.predict(inputTensor);
@@ -134,6 +147,8 @@ async function runInference(landmarks) {
     const maxIdx = scores.indexOf(Math.max(...scores));
     const confidence = scores[maxIdx];
     const label = labelMap[maxIdx];
+
+    console.log(`Prediction: ${label} (${(confidence * 100).toFixed(1)}%)`);
 
     if (confidence > 0.75 && label !== "Blank") {
         currentPrediction = label;
@@ -179,28 +194,39 @@ async function predictWebcam() {
 // ── IMAGE UPLOAD INFERENCE ──
 document.getElementById("imageUpload").addEventListener("change", async (event) => {
     const file = event.target.files[0];
-    if (!file || !handLandmarker) return;
+    if (!file || !handLandmarker || !model) {
+        console.log("Upload skipped - not ready:", { file: !!file, handLandmarker: !!handLandmarker, model: !!model });
+        return;
+    }
 
     const img = new Image();
     img.src = URL.createObjectURL(file);
     img.onload = async () => {
-        // The display canvas is handled by index.html
-        // We run inference on the original image
-        await handLandmarker.setOptions({ runningMode: "IMAGE" });
-        const result = await handLandmarker.detect(img);
+        try {
+            // The display canvas is handled by studio.html
+            // We run inference on the original image
+            await handLandmarker.setOptions({ runningMode: "IMAGE" });
+            const result = await handLandmarker.detect(img);
 
-        if (result.landmarks && result.landmarks.length > 0) {
-            // Draw box on image_canvas after it's been drawn by index.html
-            setTimeout(() => {
-                const ctx2 = imageCanvas.getContext('2d');
-                drawLandmarkBox(ctx2, result.landmarks[0], imageCanvas.width, imageCanvas.height);
-            }, 100);
-            await runInference(result.landmarks[0]);
-        } else {
+            if (result.landmarks && result.landmarks.length > 0) {
+                console.log("✓ Hand detected in uploaded image");
+                // Draw box on image_canvas after it's been drawn by studio.html
+                setTimeout(() => {
+                    const ctx2 = imageCanvas.getContext('2d');
+                    drawLandmarkBox(ctx2, result.landmarks[0], imageCanvas.width, imageCanvas.height);
+                }, 100);
+                await runInference(result.landmarks[0]);
+            } else {
+                console.log("⚠ No hand detected in uploaded image");
+                if (window.updatePrediction) window.updatePrediction("", 0);
+            }
+
+            // Switch back to VIDEO mode for live camera
+            await handLandmarker.setOptions({ runningMode: "VIDEO" });
+        } catch (error) {
+            console.error("Image inference error:", error);
             if (window.updatePrediction) window.updatePrediction("", 0);
         }
-
-        await handLandmarker.setOptions({ runningMode: "VIDEO" });
     };
 });
 
